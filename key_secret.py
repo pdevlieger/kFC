@@ -1,1 +1,0 @@
-all = {'key': 'kVtVY0meA4rsL98I9p1m5g', 'secret': 'kuSDpo0ymOMuDIdmMr7v5vAQ8WdnjXrYWg51ZXE7ac'}
