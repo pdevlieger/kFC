@@ -43,35 +43,37 @@ def sim_pearson(ratings_1, ratings_2):
     
     return r
 
-def sim_matrix(corr_item, across_item, sim=sim_pearson):
-    item_vector = [i[corr_item] for i in db_movies.find()]
-    corr_matrix = np.zeros(shape=(len(item_vector), len(item_vector)))
-    for item in item_vector:
-        db_movies.find({corr_item: item})
-    for i in range(len(item_vector)):
-        j=i
-        while j<len(item_vector):
-            ratings_1 = get_rating_dict(corr_item, across_item, item_vector[i])
-            ratings_2 = get_rating_dict(corr_item, across_item, item_vector[j])
-            corr_matrix[i][j]=corr_matrix[j][i]=sim(ratings_1, ratings_2)
-            j+=1
-        print 'Done! %s / %s' % (i, len(item_vector))
-    return corr_matrix
+#def sim_matrix(corr_item='movie_id', across_item='user_id', sim=sim_pearson):
+ #   item_vector = [i[corr_item] for i in db_movies.find()]
+  #  corr_matrix = np.zeros(shape=(len(item_vector), len(item_vector)))
+   # for item in item_vector:
+    #    db_movies.find({corr_item: item})
+#    for i in range(len(item_vector)):
+ #       j=i
+  #      while j<len(item_vector):
+   #         ratings_1 = get_rating_dict(corr_item, across_item, item_vector[i])
+    #        ratings_2 = get_rating_dict(corr_item, across_item, item_vector[j])
+     #       corr_matrix[i][j]=corr_matrix[j][i]=sim(ratings_1, ratings_2)
+      #      j+=1
+       # print 'Done! %s / %s' % (i, len(item_vector))
+#    return corr_matrix
 
-def update_corr(corr_item, across_item, movie_id, sim):
+def get_corr(corr_item, across_item, movie_id):
     item_vector = [i[corr_item] for i in db_movies.find()]
     corr = []
     for item in item_vector:
         if item!=movie_id:
             ratings_1 = get_rating_dict(corr_item, across_item, item)
             ratings_2 = get_rating_dict(corr_item, across_item, movie_id)
-            corr.append((item, sim(ratings_1, ratings_2)))
-    db_movies.update({corr_item: movie_id},
-                     {'$set': {'distances': corr}})
+            corr.append((item, sim_pearson(ratings_1, ratings_2)))
+        if item%100 == 0: print "corr done! %s /1682" % item
+    return corr
 
-def set_correlations_per_movie():
+def corr_to_db():
     item_vector = [i['movie_id'] for i in db_movies.find()]
     for item in item_vector: 
-        update_corr('movie_id', 'user_id', item, sim=sim_pearson)
-        print 'Done!'
+        corr = get_corr('movie_id', 'user_id', item)
+        db_movies.update({'movie_id': item},
+                     {'$set': {'distances': corr}})
+        print 'Done! %s / 1682' % item
     print 'All done!'
